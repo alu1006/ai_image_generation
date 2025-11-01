@@ -7,14 +7,14 @@ export interface PromptFields {
 }
 
 /**
- * A helper function to communicate with our Vercel serverless function.
+ * A helper function to communicate with our Netlify serverless function.
  * @param action - The specific API action to perform (e.g., 'generateSticker').
  * @param payload - The data to send to the API.
  * @returns The JSON response from the serverless function.
  */
 async function callApi(action: string, payload: any) {
     try {
-        const response = await fetch('/api/gemini', {
+        const response = await fetch('/.netlify/functions/gemini', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
