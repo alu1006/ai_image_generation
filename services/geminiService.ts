@@ -28,6 +28,10 @@ export const generateStickerImage = async (prompt: string): Promise<{ imageUrl: 
         responseModalities: [Modality.IMAGE],
       },
     });
+    
+    if (!response.candidates || response.candidates.length === 0 || !response.candidates[0].content || !response.candidates[0].content.parts) {
+        throw new Error("Invalid API response: No candidates or content parts found. The prompt may have been blocked.");
+    }
 
     for (const part of response.candidates[0].content.parts) {
       if (part.inlineData) {
@@ -73,6 +77,10 @@ export const editImageWithPrompt = async (base64ImageDataUrl: string, prompt: st
                 responseModalities: [Modality.IMAGE],
             },
         });
+
+        if (!response.candidates || response.candidates.length === 0 || !response.candidates[0].content || !response.candidates[0].content.parts) {
+            throw new Error("Invalid API response: No candidates or content parts found. The prompt may have been blocked.");
+        }
 
         for (const part of response.candidates[0].content.parts) {
             if (part.inlineData) {
