@@ -1,19 +1,12 @@
+
 import { GoogleGenAI, Modality, Type } from "@google/genai";
 
-const API_KEY = process.env.API_KEY;
-
-if (!API_KEY) {
-  // In a real app, you'd want to handle this more gracefully.
-  // For this environment, we assume it's always available.
-  console.warn("API_KEY environment variable not set. Using a placeholder. Gemini API calls will fail.");
-}
-
-const ai = new GoogleGenAI({ apiKey: API_KEY || " " });
-
-export const generateStickerImage = async (prompt: string): Promise<{ imageUrl: string; fullPrompt: string; }> => {
-  if (!API_KEY) {
-    return Promise.reject("API Key is not configured. Please set the API_KEY environment variable.");
+export const generateStickerImage = async (apiKey: string, prompt: string): Promise<{ imageUrl: string; fullPrompt: string; }> => {
+  if (!apiKey) {
+    return Promise.reject("API Key is not configured. Please set the API key.");
   }
+  
+  const ai = new GoogleGenAI({ apiKey });
   
   try {
     // Enhance prompt for better sticker results
@@ -54,10 +47,12 @@ export const generateStickerImage = async (prompt: string): Promise<{ imageUrl: 
   }
 };
 
-export const editImageWithPrompt = async (base64ImageDataUrl: string, prompt: string): Promise<{ imageUrl: string; }> => {
-    if (!API_KEY) {
+export const editImageWithPrompt = async (apiKey: string, base64ImageDataUrl: string, prompt: string): Promise<{ imageUrl: string; }> => {
+    if (!apiKey) {
         return Promise.reject("API Key is not configured.");
     }
+
+    const ai = new GoogleGenAI({ apiKey });
 
     try {
         const base64Data = base64ImageDataUrl.split(',')[1];
@@ -110,10 +105,12 @@ export interface PromptFields {
     style: string;
 }
 
-export const generatePromptIdea = async (): Promise<PromptFields> => {
-    if (!API_KEY) {
+export const generatePromptIdea = async (apiKey: string): Promise<PromptFields> => {
+    if (!apiKey) {
         return Promise.reject("API Key is not configured.");
     }
+
+    const ai = new GoogleGenAI({ apiKey });
 
     try {
         const prompt = "請用繁體中文生成一個單一、有創意且有趣的貼紙點子。將其分解為 5W1H 格式：人 (Who)、事 (What)、時 (When)、地 (Where) 和 風格 (Style)。這個點子應該是異想天開的，適合做成可愛的貼紙。為每個欄位提供簡潔且富有想像力的描述。";

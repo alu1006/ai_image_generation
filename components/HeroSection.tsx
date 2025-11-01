@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { generateStickerImage } from '../services/geminiService';
+import { useApiKey } from '../contexts/ApiKeyContext';
 
 interface HeroSectionProps {
     generatedImage: string | null;
@@ -9,6 +10,7 @@ interface HeroSectionProps {
 }
 
 const HeroSection: React.FC<HeroSectionProps> = ({ generatedImage, onImageGenerated, onPromptUsed }) => {
+    const { apiKey, openApiKeyModal } = useApiKey();
     const [prompt, setPrompt] = useState<string>('');
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
@@ -16,6 +18,11 @@ const HeroSection: React.FC<HeroSectionProps> = ({ generatedImage, onImageGenera
     const [actualPrompt, setActualPrompt] = useState<string>('');
 
     const handleGenerateClick = async () => {
+        if (!apiKey) {
+            openApiKeyModal();
+            return;
+        }
+
         const currentPrompt = prompt.trim() === '' ? '一隻戴著墨鏡的柴犬貼紙在衝浪' : prompt;
         onPromptUsed(currentPrompt);
         
@@ -26,7 +33,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ generatedImage, onImageGenera
         setStatusText('AI 正在努力生成中...');
 
         try {
-            const { imageUrl, fullPrompt } = await generateStickerImage(currentPrompt);
+            const { imageUrl, fullPrompt } = await generateStickerImage(apiKey, currentPrompt);
             onImageGenerated(imageUrl);
             setActualPrompt(fullPrompt);
             setStatusText('生成完畢！請按「下一關」繼續。');
@@ -74,6 +81,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({ generatedImage, onImageGenera
                                 </svg>
                                 生成中...
                             </>
+                        ) : !apiKey ? (
+                            '✨ 設定金鑰'
                         ) : (
                             '✨ 開始生成'
                         )}
