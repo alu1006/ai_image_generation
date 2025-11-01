@@ -1,7 +1,5 @@
-
 import React, { useState } from 'react';
 import { editImageWithPrompt } from '../services/geminiService';
-import { useApiKey } from '../contexts/ApiKeyContext';
 
 type Tab = 'edit' | 'style';
 
@@ -32,7 +30,6 @@ const ImageResult: React.FC<{
 );
 
 const EditTabs: React.FC<EditTabsProps> = ({ imageUrl }) => {
-    const { apiKey, openApiKeyModal } = useApiKey();
     const [activeTab, setActiveTab] = useState<Tab>('edit');
     
     // State for Edit Tab
@@ -58,16 +55,12 @@ const EditTabs: React.FC<EditTabsProps> = ({ imageUrl }) => {
     };
 
     const handleEdit = async () => {
-        if (!apiKey) {
-            openApiKeyModal();
-            return;
-        }
         if (!editPrompt.trim()) return;
         setIsEditing(true);
         setEditError(null);
         setEditedImage(null);
         try {
-            const { imageUrl } = await editImageWithPrompt(apiKey, effectiveImageUrl, editPrompt);
+            const { imageUrl } = await editImageWithPrompt(effectiveImageUrl, editPrompt);
             setEditedImage(imageUrl);
         } catch (err) {
             setEditError(err instanceof Error ? err.message : '發生未知錯誤');
@@ -77,17 +70,13 @@ const EditTabs: React.FC<EditTabsProps> = ({ imageUrl }) => {
     };
     
     const handleStyle = async () => {
-        if (!apiKey) {
-            openApiKeyModal();
-            return;
-        }
         if (!stylePrompt.trim()) return;
         setIsStyling(true);
         setStyleError(null);
         setStyledImage(null);
         try {
             const fullStylePrompt = `將這張圖轉換成 ${stylePrompt} 風格`;
-            const { imageUrl } = await editImageWithPrompt(apiKey, effectiveImageUrl, fullStylePrompt);
+            const { imageUrl } = await editImageWithPrompt(effectiveImageUrl, fullStylePrompt);
             setStyledImage(imageUrl);
         } catch (err) {
             setStyleError(err instanceof Error ? err.message : '發生未知錯誤');

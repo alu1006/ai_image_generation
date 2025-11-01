@@ -1,11 +1,8 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
 import PromptBuilder from './components/PromptBuilder';
 import EditTabs from './components/EditTabs';
-import ApiKeyModal from './components/ApiKeyModal';
-import { useApiKey } from './contexts/ApiKeyContext';
 
 // To prevent re-rendering, define static components outside the main App component.
 
@@ -216,7 +213,6 @@ const ProgressIndicator: React.FC<{ currentStep: number; totalSteps: number }> =
 };
 
 export default function App() {
-  const { apiKey } = useApiKey();
   const [currentStep, setCurrentStep] = useState(0);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [promptBuilderImage, setPromptBuilderImage] = useState<string | null>(null);
@@ -247,15 +243,6 @@ export default function App() {
   }
 
   const renderStepContent = () => {
-    if (!apiKey && currentStep > 0) {
-        return (
-            <div className="text-center py-20 bg-slate-800 rounded-lg">
-                <h2 className="text-2xl font-bold text-white mb-4">請先設定您的 API 金鑰</h2>
-                <p className="text-gray-400">請點擊右上角的「設定金鑰」按鈕來輸入您的 Google AI Studio API 金鑰。</p>
-            </div>
-        );
-    }
-
     switch (currentStep) {
         case 0: return <HeroSection 
                           generatedImage={generatedImage} 
@@ -277,7 +264,6 @@ export default function App() {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-      <ApiKeyModal />
       <div className="flex-grow">
         <ProgressIndicator currentStep={currentStep} totalSteps={totalSteps} />
         <main className="container mx-auto px-6 py-8">
