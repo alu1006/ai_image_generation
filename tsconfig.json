@@ -13,6 +13,6 @@
     "strict": true,
     "types": ["vite/client"]
   },
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "netlify/functions/**/*.ts"],
   "exclude": ["node_modules"]
 }

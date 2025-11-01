@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { editImageWithPrompt } from '../services/geminiService';
-import { useApiKey } from '../contexts/ApiKeyContext';
 
 type Tab = 'edit' | 'style';
 
@@ -32,7 +31,6 @@ const ImageResult: React.FC<{
 
 const EditTabs: React.FC<EditTabsProps> = ({ imageUrl }) => {
     const [activeTab, setActiveTab] = useState<Tab>('edit');
-    const { apiKey, openApiKeyModal } = useApiKey();
     
     // State for Edit Tab
     const [editPrompt, setEditPrompt] = useState('');
@@ -57,16 +55,12 @@ const EditTabs: React.FC<EditTabsProps> = ({ imageUrl }) => {
     };
 
     const handleEdit = async () => {
-        if (!apiKey) {
-            openApiKeyModal();
-            return;
-        }
         if (!editPrompt.trim()) return;
         setIsEditing(true);
         setEditError(null);
         setEditedImage(null);
         try {
-            const { imageUrl } = await editImageWithPrompt(apiKey, effectiveImageUrl, editPrompt);
+            const { imageUrl } = await editImageWithPrompt(effectiveImageUrl, editPrompt);
             setEditedImage(imageUrl);
         } catch (err) {
             setEditError(err instanceof Error ? err.message : '發生未知錯誤');
@@ -76,17 +70,13 @@ const EditTabs: React.FC<EditTabsProps> = ({ imageUrl }) => {
     };
     
     const handleStyle = async () => {
-        if (!apiKey) {
-            openApiKeyModal();
-            return;
-        }
         if (!stylePrompt.trim()) return;
         setIsStyling(true);
         setStyleError(null);
         setStyledImage(null);
         try {
             const fullStylePrompt = `將這張圖轉換成 ${stylePrompt} 風格`;
-            const { imageUrl } = await editImageWithPrompt(apiKey, effectiveImageUrl, fullStylePrompt);
+            const { imageUrl } = await editImageWithPrompt(effectiveImageUrl, fullStylePrompt);
             setStyledImage(imageUrl);
         } catch (err)
         {
@@ -155,11 +145,11 @@ const EditTabs: React.FC<EditTabsProps> = ({ imageUrl }) => {
                                         type="text"
                                         value={stylePrompt}
                                         onChange={(e) => setStylePrompt(e.target.value)}
-                                        placeholder="例如：轉換成像素藝術風格"
+                                        placeholder="例如：水彩畫風格"
                                         className="w-full py-2 px-3 rounded-md bg-slate-700 text-white placeholder-gray-400 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         disabled={isStyling}
                                     />
-                                    <button onClick={handleStyle} disabled={isStyling} className="w-full bg-purple-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-purple-500 transition disabled:bg-purple-400">
+                                    <button onClick={handleStyle} disabled={isStyling} className="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 transition disabled:bg-indigo-400">
                                         {isStyling ? '轉換中...' : '轉換風格'}
                                     </button>
                                 </div>

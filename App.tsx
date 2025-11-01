@@ -3,7 +3,6 @@ import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
 import PromptBuilder from './components/PromptBuilder';
 import EditTabs from './components/EditTabs';
-import ApiKeyModal from './components/ApiKeyModal';
 
 // To prevent re-rendering, define static components outside the main App component.
 
@@ -265,7 +264,6 @@ export default function App() {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-      <ApiKeyModal />
       <div className="flex-grow">
         <ProgressIndicator currentStep={currentStep} totalSteps={totalSteps} />
         <main className="container mx-auto px-6 py-8">

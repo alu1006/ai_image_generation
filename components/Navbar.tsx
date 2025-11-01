@@ -1,8 +1,6 @@
 import React from 'react';
-import { useApiKey } from '../contexts/ApiKeyContext';
 
 const Navbar: React.FC = () => {
-    const { openApiKeyModal } = useApiKey();
 
     const handleReload = (e: React.MouseEvent<HTMLAnchorElement>) => {
         e.preventDefault();
@@ -15,12 +13,6 @@ const Navbar: React.FC = () => {
                 <a href="#" onClick={handleReload} className="text-2xl font-bold text-white">
                     <span className="text-indigo-400">AI</span> 貼紙生成
                 </a>
-                <button
-                    onClick={openApiKeyModal}
-                    className="bg-slate-700 text-white font-semibold px-4 py-2 rounded-md hover:bg-slate-600 transition-colors"
-                >
-                    設定金鑰
-                </button>
             </div>
         </nav>
     );

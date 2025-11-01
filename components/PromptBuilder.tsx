@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { generateStickerImage, generatePromptIdea, PromptFields } from '../services/geminiService';
-import { useApiKey } from '../contexts/ApiKeyContext';
 
 interface PromptBuilderProps {
     onImageGenerated: (imageUrl: string | null) => void;
@@ -20,8 +19,6 @@ const PromptBuilder: React.FC<PromptBuilderProps> = ({ onImageGenerated }) => {
     const [error, setError] = useState<string | null>(null);
     const [generatedImage, setGeneratedImage] = useState<string | null>(null);
     const [hasUsedMagicFill, setHasUsedMagicFill] = useState<boolean>(false);
-    const { apiKey, openApiKeyModal } = useApiKey();
-
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
@@ -29,11 +26,6 @@ const PromptBuilder: React.FC<PromptBuilderProps> = ({ onImageGenerated }) => {
     };
 
     const handleCombineClick = async () => {
-        if (!apiKey) {
-            openApiKeyModal();
-            return;
-        }
-
         const { who, what, when, where, style } = fields;
         const parts = [who, what, when, where, style];
         const result = parts.filter(part => part && part.trim().length > 0).join(', ');
@@ -46,7 +38,7 @@ const PromptBuilder: React.FC<PromptBuilderProps> = ({ onImageGenerated }) => {
             onImageGenerated(null);
 
             try {
-                const { imageUrl } = await generateStickerImage(apiKey, result);
+                const { imageUrl } = await generateStickerImage(result);
                 setGeneratedImage(imageUrl);
                 onImageGenerated(imageUrl);
             } catch (err) {
@@ -65,11 +57,6 @@ const PromptBuilder: React.FC<PromptBuilderProps> = ({ onImageGenerated }) => {
     };
 
     const handleMagicFill = async () => {
-        if (!apiKey) {
-            openApiKeyModal();
-            return;
-        }
-
         setError(null);
         setGeneratedImage(null);
         onImageGenerated(null);
@@ -91,7 +78,7 @@ const PromptBuilder: React.FC<PromptBuilderProps> = ({ onImageGenerated }) => {
         
         setIsMagicLoading(true);
         try {
-            const idea = await generatePromptIdea(apiKey);
+            const idea = await generatePromptIdea();
             setFields(idea);
             const combined = Object.values(idea).filter(p => p).join(', ');
             setCombinedPrompt(combined);
