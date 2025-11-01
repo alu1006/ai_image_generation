@@ -23,7 +23,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 const fullPrompt = `A cute sticker of ${prompt}, vector illustration, vibrant colors, with a distinct white border, on a simple light gray background.`;
 
                 const response = await ai.models.generateContent({
-                    model: 'gemini-2.5-flash-image',
+                    model: 'gemini-2.5-flash-preview-image',
                     contents: { parts: [{ text: fullPrompt }] },
                     config: { responseModalities: [Modality.IMAGE] },
                 });
@@ -51,7 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 if (!base64Data) throw new Error("Invalid image data URL provided.");
 
                 const response = await ai.models.generateContent({
-                    model: 'gemini-2.5-flash-image',
+                    model: 'gemini-2.5-flash-preview-image',
                     contents: { parts: [{ inlineData: { mimeType: 'image/png', data: base64Data } }, { text: prompt }] },
                     config: { responseModalities: [Modality.IMAGE] },
                 });
