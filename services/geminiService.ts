@@ -1,3 +1,5 @@
+import { GoogleGenAI, Modality, Type } from "@google/genai";
+
 export interface PromptFields {
     who: string;
     what: string;
@@ -6,47 +8,111 @@ export interface PromptFields {
     style: string;
 }
 
-/**
- * A helper function to communicate with our Netlify serverless function.
- * @param action - The specific API action to perform (e.g., 'generateSticker').
- * @param payload - The data to send to the API.
- * @returns The JSON response from the serverless function.
- */
-async function callApi(action: string, payload: any) {
+const getAIClient = (apiKey: string) => new GoogleGenAI({ apiKey });
+
+const handleApiError = (error: unknown): never => {
+    console.error("Gemini API Error:", error);
+    if (error instanceof Error) {
+        // Attempt to parse Google specific error structure
+        try {
+            const errorBody = JSON.parse(error.message);
+            if (errorBody.error && errorBody.error.message) {
+                 throw new Error(`[API Error] ${errorBody.error.message}`);
+            }
+        } catch (e) {
+            // Not a JSON error message, fall through to generic message
+        }
+        throw new Error(`[API Error] ${error.message}`);
+    }
+    throw new Error('An unknown error occurred while contacting the API.');
+};
+
+
+export const generateStickerImage = async (apiKey: string, prompt: string): Promise<{ imageUrl: string; fullPrompt: string; }> => {
     try {
-        const response = await fetch('/.netlify/functions/gemini', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ action, payload }),
+        const ai = getAIClient(apiKey);
+        const fullPrompt = `A cute sticker of ${prompt}, vector illustration, vibrant colors, with a distinct white border, on a simple light gray background.`;
+        
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash-image',
+            contents: { parts: [{ text: fullPrompt }] },
+            config: { responseModalities: [Modality.IMAGE] },
         });
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({
-                error: `HTTP error! status: ${response.status}`,
-            }));
-            throw new Error(errorData.error || 'An unknown API error occurred.');
+        if (!response.candidates?.[0]?.content?.parts) {
+            throw new Error("Invalid API response: No candidates or content parts found. The prompt may have been blocked.");
         }
 
-        return await response.json();
+        for (const part of response.candidates[0].content.parts) {
+            if (part.inlineData) {
+                return {
+                    imageUrl: `data:image/png;base64,${part.inlineData.data}`,
+                    fullPrompt: fullPrompt
+                };
+            }
+        }
+        throw new Error("No image data was found in the API response.");
     } catch (error) {
-        console.error(`Error calling API for action "${action}":`, error);
-        if (error instanceof Error) {
-            throw new Error(`[API Error] ${error.message}`);
-        }
-        throw new Error('An unknown error occurred while contacting the API.');
+        return handleApiError(error);
     }
-}
-
-export const generateStickerImage = async (prompt: string): Promise<{ imageUrl: string; fullPrompt: string; }> => {
-    return callApi('generateSticker', { prompt });
 };
 
-export const editImageWithPrompt = async (base64ImageDataUrl: string, prompt: string): Promise<{ imageUrl: string; }> => {
-    return callApi('editImage', { base64ImageDataUrl, prompt });
+export const editImageWithPrompt = async (apiKey: string, base64ImageDataUrl: string, prompt: string): Promise<{ imageUrl: string; }> => {
+    try {
+        const ai = getAIClient(apiKey);
+        const base64Data = base64ImageDataUrl.split(',')[1];
+        if (!base64Data) throw new Error("Invalid image data URL provided.");
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash-image',
+            contents: { parts: [{ inlineData: { mimeType: 'image/png', data: base64Data } }, { text: prompt }] },
+            config: { responseModalities: [Modality.IMAGE] },
+        });
+        
+        if (!response.candidates?.[0]?.content?.parts) {
+            throw new Error("Invalid API response: No candidates or content parts found. The prompt may have been blocked.");
+        }
+
+        for (const part of response.candidates[0].content.parts) {
+            if (part.inlineData) {
+                return {
+                    imageUrl: `data:image/png;base64,${part.inlineData.data}`,
+                };
+            }
+        }
+        throw new Error("No image data was found in the API response.");
+    } catch (error) {
+        return handleApiError(error);
+    }
 };
 
-export const generatePromptIdea = async (): Promise<PromptFields> => {
-    return callApi('generateIdea', {});
+export const generatePromptIdea = async (apiKey: string): Promise<PromptFields> => {
+    try {
+        const ai = getAIClient(apiKey);
+        const prompt = "請用繁體中文生成一個單一、有創意且有趣的貼紙點子。將其分解為 5W1H 格式：人 (Who)、事 (What)、時 (When)、地 (Where) 和 風格 (Style)。這個點子應該是異想天開的，適合做成可愛的貼紙。為每個欄位提供簡潔且富有想像力的描述。";
+        
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        who: { type: Type.STRING, description: "The main character or subject of the sticker." },
+                        what: { type: Type.STRING, description: "What the character is doing." },
+                        when: { type: Type.STRING, description: "The atmosphere, time of day, or mood." },
+                        where: { type: Type.STRING, description: "The setting or background." },
+                        style: { type: Type.STRING, description: "The artistic style of the sticker." },
+                    },
+                    required: ["who", "what", "when", "where", "style"],
+                },
+            },
+        });
+
+        const jsonText = response.text.trim();
+        return JSON.parse(jsonText);
+    } catch (error) {
+        return handleApiError(error);
+    }
 };
